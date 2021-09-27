@@ -14,6 +14,9 @@ class MiniApplication extends Application {
     var glBuffer:GLBuffer;
 	var glTexture:GLTexture;
 
+    var glBufferBG:GLBuffer;
+	var glTextureBG:GLTexture;
+
     public function new() {
         super();
     }
@@ -22,9 +25,42 @@ class MiniApplication extends Application {
         Debug.log("App:init");
         Gfx.init();
 
-        var image = Assets.getImage("assets/intro.png");
+        // Background
+        var image = Assets.getImage("assets/thriller_pd/background.png");
 
         var data = [
+            640 + 320, 	400 + 200, 	1, 1,   1, 1, 1, 1,
+            -320, 		400 + 200, 	0, 1,   1, 1, 1, 1,
+            640 + 320, 	-200, 		1, 0,   1, 1, 1, 1,
+            -320, 		-200, 		0, 0,   1, 1, 1, 1,
+        ];
+
+        glBufferBG = Gfx.gl.createBuffer();
+        Gfx.gl.bindBuffer(Gfx.gl.ARRAY_BUFFER, glBufferBG);
+        Gfx.gl.bufferData(Gfx.gl.ARRAY_BUFFER, new Float32Array(data), Gfx.gl.STATIC_DRAW);
+        Gfx.gl.bindBuffer(Gfx.gl.ARRAY_BUFFER, null);
+
+        glTextureBG = Gfx.gl.createTexture();
+        Gfx.gl.bindTexture(Gfx.gl.TEXTURE_2D, glTextureBG);
+        Gfx.gl.texParameteri(Gfx.gl.TEXTURE_2D, Gfx.gl.TEXTURE_WRAP_S, Gfx.gl.CLAMP_TO_EDGE);
+        Gfx.gl.texParameteri(Gfx.gl.TEXTURE_2D, Gfx.gl.TEXTURE_WRAP_T, Gfx.gl.CLAMP_TO_EDGE);
+
+        #if js
+            Gfx.gl.texImage2D(Gfx.gl.TEXTURE_2D, 0, Gfx.gl.RGBA, Gfx.gl.RGBA, Gfx.gl.UNSIGNED_BYTE, image.src);
+        #else
+            Gfx.Gfx.gl.texImage2D(Gfx.gl.TEXTURE_2D, 0, Gfx.gl.RGBA, image.buffer.width, image.buffer.height, 0, Gfx.gl.RGBA, Gfx.gl.UNSIGNED_BYTE, image.data);
+        #end
+
+        Gfx.gl.texParameteri(Gfx.gl.TEXTURE_2D, Gfx.gl.TEXTURE_MAG_FILTER, Gfx.gl.NEAREST);
+        Gfx.gl.texParameteri(Gfx.gl.TEXTURE_2D, Gfx.gl.TEXTURE_MIN_FILTER, Gfx.gl.NEAREST);
+
+        Gfx.gl.bindTexture(Gfx.gl.TEXTURE_2D, null);
+
+        // Intro
+
+        image = Assets.getImage("assets/thriller_pd/intro.png");
+
+        data = [
             640, 	400, 	1, 1,   1, 1, 1, 1,
             0, 		400, 	0, 1,   1, 1, 1, 1,
             640, 	0, 		1, 0,   1, 1, 1, 1,
@@ -117,16 +153,31 @@ class MiniApplication extends Application {
 
                     Gfx.gl.uniformMatrix4fv(Shader.current.u_camMatrix, false, Gfx.projMatrix);
 
+                    #if desktop
+		                Gfx.gl.enable(Gfx.gl.TEXTURE_2D);
+		            #end
+
+                    // Background
+
+                    Gfx.gl.activeTexture(Gfx.gl.TEXTURE0);
+		            Gfx.gl.bindTexture(Gfx.gl.TEXTURE_2D, glTextureBG);
+
+                    Gfx.gl.bindBuffer(Gfx.gl.ARRAY_BUFFER, glBufferBG);
+
+                    Gfx.gl.uniform1i(Shader.current.u_Texture0, 0);
+                    
+                    Shader.current.setAttribute(Shader.current.a_Position, 2, Gfx.gl.FLOAT, 8 * Float32Array.BYTES_PER_ELEMENT, 0);
+                    Shader.current.setAttribute(Shader.current.a_TexCoord0, 2, Gfx.gl.FLOAT, 8 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
+                    Shader.current.setAttribute(Shader.current.a_Color, 4, Gfx.gl.FLOAT, 8 * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
+
+		            Gfx.gl.drawArrays(Gfx.gl.TRIANGLE_STRIP, 0, 4);
+
+                    // Intro
+
                     Gfx.gl.activeTexture(Gfx.gl.TEXTURE0);
 		            Gfx.gl.bindTexture(Gfx.gl.TEXTURE_2D, glTexture);
 
-		            // #if desktop
-		                Gfx.gl.enable(Gfx.gl.TEXTURE_2D);
-		            // #end
-
                     Gfx.gl.bindBuffer(Gfx.gl.ARRAY_BUFFER, glBuffer);
-
-		            // Gfx.gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
 
                     Gfx.gl.uniform1i(Shader.current.u_Texture0, 0);
                     
@@ -153,7 +204,6 @@ class MiniApplication extends Application {
     }
 
     private function isAppReady():Bool {
-        // Debug.log("isReady:", preloader.complete, (this.game != null), preloader.complete && (this.game != null));
         return preloader.complete && (this.game != null);
     }
 
@@ -173,6 +223,10 @@ class MiniApplication extends Application {
         Debug.log(Gfx.screenWidth, Gfx.screenHeight, window.width, window.height, ratioWidth, ratioHeight, zoom);
         Debug.log(projWidth, projHeight, xoffset, yoffset);
 
-        Gfx.projMatrix.createOrtho(xoffset, xoffset + projWidth, yoffset + projHeight, yoffset, -1000, 1000);
+        Gfx.projMatrix.createOrtho(
+            Math.round(xoffset), xoffset + projWidth, 
+            yoffset + projHeight, Math.round(yoffset), 
+            -1000, 1000
+        );
     }
 }
