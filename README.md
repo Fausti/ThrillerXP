@@ -1,1 +1,1 @@
-# ThrillerXP
+# Thriller X.P.

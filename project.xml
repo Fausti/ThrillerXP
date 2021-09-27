@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	
+	<meta title="Thriller X.P." package="de.netzweh.thrillerxp" version="A001" company="Netzweh" />
+	<app main="Main" path="Export" file="ThrillerXP" />
+	
+	<window width="1280" height="800" orientation="landscape" resizable="true" fps="60" vsync="true" background="0x000000FF"/>
+
+	<source path="Source" />
+	
+	<haxelib name="lime" />
+	
+	<assets path="Assets" rename="assets" embed="false" />
+	
+</project>
