@@ -33,7 +33,7 @@ class MiniApplication extends Application {
 	private var __u_InputSize:Array<GLUniformLocation>;
 	private var __u_OutputSize:Array<GLUniformLocation>;
 
-    var upscaleShader = 1;
+    var upscaleShader = -1;
 
     var scale:Float = 1;
 
@@ -113,6 +113,18 @@ class MiniApplication extends Application {
             case OPENGL, OPENGLES, WEBGL:
                     Gfx.gl = window.context.webgl;
             default:
+        }
+
+        if (!window.fullscreen) {
+            trace(window.display.bounds.width, window.display.bounds.height);
+            trace(window.display.dpi);
+
+            if (window.display.bounds.height >= 800) {
+                window.resize(1280, 800);
+                window.move(Math.floor(window.display.bounds.width / 2 - 640), Math.floor(window.display.bounds.height / 2 - 400));
+            } else {
+                window.move(Math.floor(window.display.bounds.width / 2 - 320), Math.floor(window.display.bounds.height / 2 - 200));
+            }
         }
     }
     override function onPreloadComplete() {
@@ -244,24 +256,22 @@ class MiniApplication extends Application {
             var offsetX:Float = restW / 2;
             var offsetY:Float = restH / 2;
 
+            var offsetFixX:Int = 0;
+            var offsetFixY:Int = 0;
 
-            #if windows
-                // visible render issues when not using integer coordinates under windows 10
-                offsetX = Math.floor(offsetX);
-                offsetY = Math.floor(offsetY);
-            #end
+            
 
             Debug.log("Offset", offsetX, offsetY);
 
             Gfx.projMatrix.createOrtho(
-                -offsetX, screenW + offsetX, 
-                screenH + offsetY, -offsetY, 
+                -offsetX, screenW + offsetX + offsetFixX, 
+                screenH + offsetY + offsetFixY, -offsetY, 
                 -1000, 1000
             );
 
             projRect.setTo(offsetX, offsetY, screenW * ratio, screenH * ratio);
 
-            Debug.log(zoom, "New", -offsetX, screenW + offsetX, screenH + offsetY, -offsetY, "\n");
+            Debug.log(zoom, "New", -offsetX, screenW + offsetX + offsetFixX, screenH + offsetY + offsetFixY, -offsetY, "\n");
             Debug.log(window.width, (screenW + restW) * 2);
             Debug.log(window.height, (screenH + restH) * 2);
 
@@ -276,6 +286,10 @@ class MiniApplication extends Application {
             upscaleShader = 0;
         } else if (keyCode == KeyCode.NUMBER_3) {
             upscaleShader = 1;
+        } else if (keyCode == KeyCode.NUMBER_4) {
+            if (!window.fullscreen) window.resize(640, 400);
+        } else if (keyCode == KeyCode.NUMBER_5) {
+            if (!window.fullscreen) window.resize(640 * 2, 400 * 2);
         }
     }
 }

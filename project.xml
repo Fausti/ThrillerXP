@@ -4,7 +4,7 @@
 	<meta title="Thriller X.P." package="de.netzweh.thrillerxp" version="A001" company="Netzweh" />
 	<app main="Main" path="Export" file="ThrillerXP" />
 	
-	<window width="1280" height="800" orientation="landscape" resizable="true" fps="60" vsync="true" background="0x000000FF"/>
+	<window width="640" height="400" orientation="landscape" resizable="false" fps="60" vsync="true" background="0x000000FF"/>
 
 	<source path="Source" />
 	
