@@ -1,5 +1,7 @@
 package mini;
 
+import lime.ui.KeyCode;
+import lime.ui.KeyModifier;
 import lime.graphics.opengl.GLUniformLocation;
 import lime.graphics.opengl.GLFramebuffer;
 import lime.math.Rectangle;
@@ -30,6 +32,8 @@ class MiniApplication extends Application {
 	private var __u_Scale:Array<GLUniformLocation>;
 	private var __u_InputSize:Array<GLUniformLocation>;
 	private var __u_OutputSize:Array<GLUniformLocation>;
+
+    var upscaleShader = 1;
 
     var scale:Float = 1;
 
@@ -177,7 +181,6 @@ class MiniApplication extends Application {
                     // draw framebuffer content
 
                     // 
-                    var upscaleShader = 1;
 
                     if (upscaleShader == -1 || scale == 1) {
                         Gfx.setShader(Gfx.shaderDefault);
@@ -256,6 +259,16 @@ class MiniApplication extends Application {
             Debug.log(window.height, (screenH + restH) * 2);
 
             scale = zoom;
+        }
+    }
+
+    override function onKeyUp(keyCode:KeyCode, modifier:KeyModifier) {
+        if (keyCode == KeyCode.NUMBER_1) {
+            upscaleShader = -1;
+        } else if (keyCode == KeyCode.NUMBER_2) {
+            upscaleShader = 0;
+        } else if (keyCode == KeyCode.NUMBER_3) {
+            upscaleShader = 1;
         }
     }
 }
