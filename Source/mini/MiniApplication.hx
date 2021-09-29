@@ -244,6 +244,13 @@ class MiniApplication extends Application {
             var offsetX:Float = restW / 2;
             var offsetY:Float = restH / 2;
 
+
+            #if windows
+                // visible render issues when not using integer coordinates under windows 10
+                offsetX = Math.floor(offsetX);
+                offsetY = Math.floor(offsetY);
+            #end
+
             Debug.log("Offset", offsetX, offsetY);
 
             Gfx.projMatrix.createOrtho(
