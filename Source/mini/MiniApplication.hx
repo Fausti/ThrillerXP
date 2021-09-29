@@ -1,5 +1,10 @@
 package mini;
 
+import lime.graphics.opengl.GLUniformLocation;
+import lime.graphics.opengl.GLFramebuffer;
+import lime.math.Rectangle;
+import mini.gfx.Buffer;
+import mini.gfx.Texture;
 import lime.graphics.RenderContext;
 import mini.gfx.Shader;
 import lime.utils.Float32Array;
@@ -9,13 +14,24 @@ import lime.utils.Assets;
 import lime.app.Application;
 
 class MiniApplication extends Application {
+    var projRect:Rectangle = new Rectangle();
+
     var game:Game;
 
-    var glBuffer:GLBuffer;
-	var glTexture:GLTexture;
+    var bufferBG:Buffer;
+	var textureBG:Texture;
 
-    var glBufferBG:GLBuffer;
-	var glTextureBG:GLTexture;
+    var textureFramebuffer:Texture;
+    var bufferFramebuffer:Buffer;
+    var framebuffer:GLFramebuffer;
+
+    private var __shaders:Array<String> = ["hq2x", "hq4x"];
+	private var __upscaleShader:Array<Shader>;
+	private var __u_Scale:Array<GLUniformLocation>;
+	private var __u_InputSize:Array<GLUniformLocation>;
+	private var __u_OutputSize:Array<GLUniformLocation>;
+
+    var scale:Float = 1;
 
     public function new() {
         super();
@@ -25,8 +41,10 @@ class MiniApplication extends Application {
         Debug.log("App:init");
         Gfx.init();
 
-        // Background
-        var image = Assets.getImage("assets/thriller_pd/background.png");
+        // Framebuffer
+
+        textureFramebuffer = new Texture();
+        textureFramebuffer.upload(640 * 2, 400 * 2, null);
 
         var data = [
             640 + 320, 	400 + 200, 	1, 1,   1, 1, 1, 1,
@@ -35,58 +53,43 @@ class MiniApplication extends Application {
             -320, 		-200, 		0, 0,   1, 1, 1, 1,
         ];
 
-        glBufferBG = Gfx.gl.createBuffer();
-        Gfx.gl.bindBuffer(Gfx.gl.ARRAY_BUFFER, glBufferBG);
-        Gfx.gl.bufferData(Gfx.gl.ARRAY_BUFFER, new Float32Array(data), Gfx.gl.STATIC_DRAW);
-        Gfx.gl.bindBuffer(Gfx.gl.ARRAY_BUFFER, null);
+        bufferFramebuffer = new Buffer();
+        bufferFramebuffer.setData(data);
 
-        glTextureBG = Gfx.gl.createTexture();
-        Gfx.gl.bindTexture(Gfx.gl.TEXTURE_2D, glTextureBG);
-        Gfx.gl.texParameteri(Gfx.gl.TEXTURE_2D, Gfx.gl.TEXTURE_WRAP_S, Gfx.gl.CLAMP_TO_EDGE);
-        Gfx.gl.texParameteri(Gfx.gl.TEXTURE_2D, Gfx.gl.TEXTURE_WRAP_T, Gfx.gl.CLAMP_TO_EDGE);
+        framebuffer = Gfx.gl.createFramebuffer();
+        Gfx.gl.bindFramebuffer(Gfx.gl.FRAMEBUFFER, framebuffer);
+        Gfx.gl.framebufferTexture2D(Gfx.gl.FRAMEBUFFER, Gfx.gl.COLOR_ATTACHMENT0, Gfx.gl.TEXTURE_2D, textureFramebuffer.handle, 0);
+        Gfx.gl.bindFramebuffer(Gfx.gl.FRAMEBUFFER, null);
 
-        #if js
-            Gfx.gl.texImage2D(Gfx.gl.TEXTURE_2D, 0, Gfx.gl.RGBA, Gfx.gl.RGBA, Gfx.gl.UNSIGNED_BYTE, image.src);
-        #else
-            Gfx.Gfx.gl.texImage2D(Gfx.gl.TEXTURE_2D, 0, Gfx.gl.RGBA, image.buffer.width, image.buffer.height, 0, Gfx.gl.RGBA, Gfx.gl.UNSIGNED_BYTE, image.data);
-        #end
-
-        Gfx.gl.texParameteri(Gfx.gl.TEXTURE_2D, Gfx.gl.TEXTURE_MAG_FILTER, Gfx.gl.NEAREST);
-        Gfx.gl.texParameteri(Gfx.gl.TEXTURE_2D, Gfx.gl.TEXTURE_MIN_FILTER, Gfx.gl.NEAREST);
-
-        Gfx.gl.bindTexture(Gfx.gl.TEXTURE_2D, null);
-
-        // Intro
-
-        image = Assets.getImage("assets/thriller_pd/intro.png");
+        // Overlay
 
         data = [
-            640, 	400, 	1, 1,   1, 1, 1, 1,
-            0, 		400, 	0, 1,   1, 1, 1, 1,
-            640, 	0, 		1, 0,   1, 1, 1, 1,
+            640 * 2, 	400 * 2, 	1, 1,   1, 1, 1, 1,
+            0, 		400 * 2, 	0, 1,   1, 1, 1, 1,
+            640 * 2, 	0, 		1, 0,   1, 1, 1, 1,
             0, 		0, 		0, 0,   1, 1, 1, 1,
         ];
 
-        glBuffer = Gfx.gl.createBuffer();
-        Gfx.gl.bindBuffer(Gfx.gl.ARRAY_BUFFER, glBuffer);
-        Gfx.gl.bufferData(Gfx.gl.ARRAY_BUFFER, new Float32Array(data), Gfx.gl.STATIC_DRAW);
-        Gfx.gl.bindBuffer(Gfx.gl.ARRAY_BUFFER, null);
+        bufferBG = new Buffer();
+        bufferBG.setData(data);
 
-        glTexture = Gfx.gl.createTexture();
-        Gfx.gl.bindTexture(Gfx.gl.TEXTURE_2D, glTexture);
-        Gfx.gl.texParameteri(Gfx.gl.TEXTURE_2D, Gfx.gl.TEXTURE_WRAP_S, Gfx.gl.CLAMP_TO_EDGE);
-        Gfx.gl.texParameteri(Gfx.gl.TEXTURE_2D, Gfx.gl.TEXTURE_WRAP_T, Gfx.gl.CLAMP_TO_EDGE);
+        textureBG = Texture.fromFile("assets/thriller_pd/background.png");
 
-        #if js
-            Gfx.gl.texImage2D(Gfx.gl.TEXTURE_2D, 0, Gfx.gl.RGBA, Gfx.gl.RGBA, Gfx.gl.UNSIGNED_BYTE, image.src);
-        #else
-            Gfx.Gfx.gl.texImage2D(Gfx.gl.TEXTURE_2D, 0, Gfx.gl.RGBA, image.buffer.width, image.buffer.height, 0, Gfx.gl.RGBA, Gfx.gl.UNSIGNED_BYTE, image.data);
-        #end
-
-        Gfx.gl.texParameteri(Gfx.gl.TEXTURE_2D, Gfx.gl.TEXTURE_MAG_FILTER, Gfx.gl.NEAREST);
-        Gfx.gl.texParameteri(Gfx.gl.TEXTURE_2D, Gfx.gl.TEXTURE_MIN_FILTER, Gfx.gl.NEAREST);
-
-        Gfx.gl.bindTexture(Gfx.gl.TEXTURE_2D, null);
+        __upscaleShader = [];
+		__u_Scale = [];
+		__u_InputSize = [];
+		__u_OutputSize = [];
+		
+		var index:Int = 0;
+		for (fileName in __shaders) {
+			__upscaleShader[index] = Shader.createShaderFrom(Assets.getText("assets/shader/"+fileName+".vert"), Assets.getText("assets/shader/"+fileName+".frag"));
+		
+			__u_Scale[index] = __upscaleShader[index].getUniformLocation("u_Scale");
+			__u_InputSize[index] = __upscaleShader[index].getUniformLocation("u_InputSize");
+			__u_OutputSize[index] = __upscaleShader[index].getUniformLocation("u_OutputSize");
+			
+			index++;
+		}
     }
 
     public function init() {
@@ -118,7 +121,7 @@ class MiniApplication extends Application {
         if (game != null) {
             game.init(this);
 
-            updateProjectionMatrix();
+            updateMatrix();
         }
     }
 
@@ -136,58 +139,64 @@ class MiniApplication extends Application {
                 case OPENGL, OPENGLES, WEBGL:
                     Gfx.gl = context.webgl;
 
-                    // Gfx.gl.depthMask(true);
-                    // Gfx.gl.stencilMask(0xFF);
-                    Gfx.gl.clearColor(1, 0, 0, 1);
-                    Gfx.gl.clear(Gfx.gl.COLOR_BUFFER_BIT | Gfx.gl.DEPTH_BUFFER_BIT | Gfx.gl.STENCIL_BUFFER_BIT);
+                    // prepare rendering
 
-                    Gfx.gl.viewport(0, 0, window.width, window.height);
-
-                    // Gfx.gl.depthMask(false);
-                    //
                     Gfx.gl.enable(Gfx.gl.BLEND);
                     Gfx.gl.blendFunc(Gfx.gl.SRC_ALPHA, Gfx.gl.ONE_MINUS_SRC_ALPHA);
                     Gfx.gl.disable(Gfx.gl.CULL_FACE);
 
                     Gfx.setShader(Gfx.shaderDefault);
 
-                    Gfx.gl.uniformMatrix4fv(Shader.current.u_camMatrix, false, Gfx.projMatrix);
+                    Gfx.gl.uniformMatrix4fv(Shader.current.u_camMatrix, false, Gfx.screenMatrix);
 
                     #if desktop
 		                Gfx.gl.enable(Gfx.gl.TEXTURE_2D);
 		            #end
 
-                    // Background
-
                     Gfx.gl.activeTexture(Gfx.gl.TEXTURE0);
-		            Gfx.gl.bindTexture(Gfx.gl.TEXTURE_2D, glTextureBG);
 
-                    Gfx.gl.bindBuffer(Gfx.gl.ARRAY_BUFFER, glBufferBG);
 
-                    Gfx.gl.uniform1i(Shader.current.u_Texture0, 0);
-                    
-                    Shader.current.setAttribute(Shader.current.a_Position, 2, Gfx.gl.FLOAT, 8 * Float32Array.BYTES_PER_ELEMENT, 0);
-                    Shader.current.setAttribute(Shader.current.a_TexCoord0, 2, Gfx.gl.FLOAT, 8 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-                    Shader.current.setAttribute(Shader.current.a_Color, 4, Gfx.gl.FLOAT, 8 * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
+                    Gfx.gl.bindFramebuffer(Gfx.gl.FRAMEBUFFER, framebuffer);
 
-		            Gfx.gl.drawArrays(Gfx.gl.TRIANGLE_STRIP, 0, 4);
+                    Gfx.gl.clearColor(1, 0, 0, 1);
+                    Gfx.gl.clear(Gfx.gl.COLOR_BUFFER_BIT | Gfx.gl.DEPTH_BUFFER_BIT | Gfx.gl.STENCIL_BUFFER_BIT);
 
-                    // Intro
+                    Gfx.gl.viewport(0, 0, 640 * 2, 400 * 2);
 
-                    Gfx.gl.activeTexture(Gfx.gl.TEXTURE0);
-		            Gfx.gl.bindTexture(Gfx.gl.TEXTURE_2D, glTexture);
-
-                    Gfx.gl.bindBuffer(Gfx.gl.ARRAY_BUFFER, glBuffer);
-
-                    Gfx.gl.uniform1i(Shader.current.u_Texture0, 0);
-                    
-                    Shader.current.setAttribute(Shader.current.a_Position, 2, Gfx.gl.FLOAT, 8 * Float32Array.BYTES_PER_ELEMENT, 0);
-                    Shader.current.setAttribute(Shader.current.a_TexCoord0, 2, Gfx.gl.FLOAT, 8 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
-                    Shader.current.setAttribute(Shader.current.a_Color, 4, Gfx.gl.FLOAT, 8 * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
-
-		            Gfx.gl.drawArrays(Gfx.gl.TRIANGLE_STRIP, 0, 4);
-
+                    // Gfx.gl.scissor(Math.floor(projRect.x), Math.floor(projRect.y), Math.floor(projRect.width), Math.floor(projRect.height));
+                    // Gfx.gl.enable(Gfx.gl.SCISSOR_TEST);
                     this.game.render();
+                    // Gfx.gl.disable(Gfx.gl.SCISSOR_TEST);
+
+                    // draw overlay
+                    
+		            textureBG.use();
+                    bufferBG.draw();
+                    Gfx.gl.bindFramebuffer(Gfx.gl.FRAMEBUFFER, null);
+
+                    // draw framebuffer content
+
+                    // 
+                    var upscaleShader = 1;
+
+                    if (upscaleShader == -1 || scale == 1) {
+                        Gfx.setShader(Gfx.shaderDefault);
+                    } else {
+                        __upscaleShader[upscaleShader].use();
+                        Gfx.gl.uniform2f(__u_Scale[upscaleShader], scale, scale);
+                        Gfx.gl.uniform2f(__u_OutputSize[upscaleShader], 640 * scale, 400 * scale);
+                        Gfx.gl.uniform2f(__u_InputSize[upscaleShader], 640, 400);
+                    }
+
+                    Gfx.gl.uniformMatrix4fv(Shader.current.u_camMatrix, false, Gfx.projMatrix);
+
+                    Gfx.gl.clearColor(0, 1, 0, 1);
+                    Gfx.gl.clear(Gfx.gl.COLOR_BUFFER_BIT | Gfx.gl.DEPTH_BUFFER_BIT | Gfx.gl.STENCIL_BUFFER_BIT);
+
+                    Gfx.gl.viewport(0, 0, window.width, window.height);
+                    textureFramebuffer.use();
+                    bufferFramebuffer.draw();
+                    
                 default:
             }
         }
@@ -199,7 +208,7 @@ class MiniApplication extends Application {
         super.onWindowResize(width, height);
 
         if (game != null) {
-            updateProjectionMatrix();
+            updateMatrix();
         }
     }
 
@@ -207,26 +216,46 @@ class MiniApplication extends Application {
         return preloader.complete && (this.game != null);
     }
 
-    private function updateProjectionMatrix() {
-        var ratioWidth:Float = window.width / Gfx.screenWidth;
-        var ratioHeight:Float = window.height / Gfx.screenHeight;
-        
-        var zoom:Float = Math.floor(Math.min(ratioWidth, ratioHeight));
-        if (zoom == 0) zoom = 1;
+    private function updateMatrix() {
+        var screenW = Gfx.screenWidth;
+        var screenH = Gfx.screenHeight;
 
-        var projWidth:Float = window.width / zoom;
-        var projHeight:Float = window.height / zoom;
+        if (screenW > 0 && screenH > 0) {
+            var ratioW:Float = window.width / screenW;
+            var ratioH:Float = window.height / screenH;
 
-        var xoffset:Float = -(projWidth - Gfx.screenWidth) / 2;
-        var yoffset:Float = -(projHeight - Gfx.screenHeight) / 2;
+            var ratio:Float = Math.min(ratioW, ratioH);
+            var zoom:Int = Math.floor(ratio);
+            if (zoom < 1) zoom = 1;
 
-        Debug.log(Gfx.screenWidth, Gfx.screenHeight, window.width, window.height, ratioWidth, ratioHeight, zoom);
-        Debug.log(projWidth, projHeight, xoffset, yoffset);
+            var projWidth:Float = window.width / zoom;
+            var projHeight:Float = window.height / zoom;
 
-        Gfx.projMatrix.createOrtho(
-            Math.round(xoffset), xoffset + projWidth, 
-            yoffset + projHeight, Math.round(yoffset), 
-            -1000, 1000
-        );
+            Debug.log("Proj", projWidth, projHeight);
+
+            var restW:Float = projWidth - screenW;
+            var restH:Float = projHeight - screenH;
+
+            Debug.log("Rest", restW, restH);
+
+            var offsetX:Float = restW / 2;
+            var offsetY:Float = restH / 2;
+
+            Debug.log("Offset", offsetX, offsetY);
+
+            Gfx.projMatrix.createOrtho(
+                -offsetX, screenW + offsetX, 
+                screenH + offsetY, -offsetY, 
+                -1000, 1000
+            );
+
+            projRect.setTo(offsetX, offsetY, screenW * ratio, screenH * ratio);
+
+            Debug.log(zoom, "New", -offsetX, screenW + offsetX, screenH + offsetY, -offsetY, "\n");
+            Debug.log(window.width, (screenW + restW) * 2);
+            Debug.log(window.height, (screenH + restH) * 2);
+
+            scale = zoom;
+        }
     }
 }

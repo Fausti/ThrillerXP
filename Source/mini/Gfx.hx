@@ -13,7 +13,7 @@ class Gfx {
     public static var screenHeight:Int = 0;
     public static var screenZoom:Int = 1;
 
-    public static var viewMatrix:Matrix4 = new Matrix4();
+    public static var screenMatrix:Matrix4 = new Matrix4();
     public static var projMatrix:Matrix4 = new Matrix4();
 
     public static function init() {
@@ -24,6 +24,10 @@ class Gfx {
     public static function setScreenSize(w:Int, h:Int) {
         Gfx.screenWidth = w;
         Gfx.screenHeight = h;
+
+        screenMatrix.createOrtho(0, w * 2, 
+            0, h * 2, 
+            -1000, 1000);
     }
 
     public static function setShader(shader:Shader) {
