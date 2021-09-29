@@ -287,9 +287,17 @@ class MiniApplication extends Application {
         } else if (keyCode == KeyCode.NUMBER_3) {
             upscaleShader = 1;
         } else if (keyCode == KeyCode.NUMBER_4) {
-            if (!window.fullscreen) window.resize(640, 400);
+            if (!window.fullscreen) {
+                window.resize(640, 400);
+                window.move(Math.floor(window.display.bounds.width / 2 - 320), Math.floor(window.display.bounds.height / 2 - 200));
+            }
         } else if (keyCode == KeyCode.NUMBER_5) {
-            if (!window.fullscreen) window.resize(640 * 2, 400 * 2);
+            if (!window.fullscreen) {
+                window.resize(640 * 2, 400 * 2);
+                window.move(Math.floor(window.display.bounds.width / 2 - 640), Math.floor(window.display.bounds.height / 2 - 400));
+            }
+        } else if (keyCode == KeyCode.RETURN && (modifier == KeyModifier.ALT || modifier == 1024 || modifier == 2048)) {
+            window.fullscreen = !window.fullscreen;
         }
     }
 }
