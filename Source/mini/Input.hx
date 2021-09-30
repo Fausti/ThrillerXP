@@ -1,0 +1,5 @@
+package mini;
+
+class Input {
+    
+}

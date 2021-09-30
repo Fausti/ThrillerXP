@@ -1,5 +1,7 @@
 package mini;
 
+import lime.ui.MouseWheelMode;
+import lime.ui.MouseButton;
 import lime.ui.KeyCode;
 import lime.ui.KeyModifier;
 import lime.graphics.opengl.GLUniformLocation;
@@ -276,5 +278,29 @@ class MiniApplication extends Application {
         } else if (keyCode == KeyCode.RETURN && (modifier == KeyModifier.ALT || modifier == 1024 || modifier == 2048)) {
             window.fullscreen = !window.fullscreen;
         }
+    }
+
+    inline function fixMouseX(x:Float):Int {
+        return Math.floor((x / scale) - projRect.x);
+    }
+
+    inline function fixMouseY(y:Float):Int {
+        return Math.floor((y / scale) - projRect.y);
+    }
+
+    override function onMouseDown(x:Float, y:Float, button:MouseButton) {
+        if (game != null) game.onMouseDown(fixMouseX(x), fixMouseY(y), button);
+    }
+
+    override function onMouseUp(x:Float, y:Float, button:MouseButton) {
+        if (game != null) game.onMouseUp(fixMouseX(x), fixMouseY(y), button);
+    }
+
+    override function onMouseMove(x:Float, y:Float) {
+        if (game != null) game.onMouseMove(fixMouseX(x), fixMouseY(y));
+    }
+
+    override function onMouseWheel(deltaX:Float, deltaY:Float, deltaMode:MouseWheelMode) {
+        
     }
 }

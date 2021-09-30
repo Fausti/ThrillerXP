@@ -2,6 +2,7 @@ package mini.gfx;
 
 typedef TileData = {
     tileIndex:Int,
+    color:Color,
     userData:Dynamic,
 };
 
@@ -47,7 +48,7 @@ class Tilemap {
             x1 = (x + 1) * 16;
 
             for (y in 0 ... h) {
-                map[x].push({tileIndex: 0, userData: {}});
+                map[x].push({tileIndex: 0, color: new Color(1, 1, 1, 1), userData: {}});
 
                 y0 = y * 16;
                 y1 = (y + 1) * 16;
@@ -86,6 +87,10 @@ class Tilemap {
         dataVertices.push(a);
     }
 
+    inline function getDataIndex(x:Int, y:Int):Int {
+        return (x * height + y) * 8 * 4;
+    }
+
     public function draw() {
         if (dirty) {
             buffer.setVertices(dataVertices);
@@ -97,15 +102,24 @@ class Tilemap {
         buffer.draw();
     }
 
+    public function insideMap(x:Int, y:Int):Bool {
+        if (x < 0 || y < 0 || x >= width || y >= height) return false;
+        return true;
+    }
+
     public function getTileData(x:Int, y:Int):TileData {
         return map[x][y];
     }
 
     public function getTile(x:Int, y:Int):Int {
+        if (!insideMap(x, y)) return -1;
+
         return map[x][y].tileIndex;
     }
 
     public function setTile(x:Int, y:Int, tileIndex:Int) {
+        if (!insideMap(x, y)) return;
+
         map[x][y].tileIndex = tileIndex;
         
         var x0:Float, y0:Float, x1:Float, y1:Float;
@@ -121,7 +135,8 @@ class Tilemap {
         u1 = (tileX + 1) * pixelSize;
         v1 = (tileY + 1) * pixelSize;
 
-        var dataIndex:Int = (y * width + x) * 8 * 4;
+        var dataIndex:Int = getDataIndex(x, y);
+
         dataVertices[dataIndex + 2] = u0;
         dataVertices[dataIndex + 3] = v0;
 
@@ -144,6 +159,42 @@ class Tilemap {
         // addVertex(x0, y1,     u0, v1,       1, 1, 1, 1);
         // addVertex(x1, y1,     u1, v1,       1, 1, 1, 1);
         // addVertex(x1, y0,     u1, v0,       1, 1, 1, 1);
+
+        dirty = true;
+    }
+
+    public function setColor(x:Int, y:Int, c:Color) {
+        if (!insideMap(x, y)) return;
+
+        map[x][y].color.set(c);
+
+        var dataIndex:Int = getDataIndex(x, y);
+
+        dataVertices[dataIndex + 4] = c.r;
+        dataVertices[dataIndex + 5] = c.g;
+        dataVertices[dataIndex + 6] = c.b;
+        dataVertices[dataIndex + 7] = c.a;
+
+        dataIndex = dataIndex + 8;
+
+        dataVertices[dataIndex + 4] = c.r;
+        dataVertices[dataIndex + 5] = c.g;
+        dataVertices[dataIndex + 6] = c.b;
+        dataVertices[dataIndex + 7] = c.a;
+
+        dataIndex = dataIndex + 8;
+
+        dataVertices[dataIndex + 4] = c.r;
+        dataVertices[dataIndex + 5] = c.g;
+        dataVertices[dataIndex + 6] = c.b;
+        dataVertices[dataIndex + 7] = c.a;
+
+        dataIndex = dataIndex + 8;
+
+        dataVertices[dataIndex + 4] = c.r;
+        dataVertices[dataIndex + 5] = c.g;
+        dataVertices[dataIndex + 6] = c.b;
+        dataVertices[dataIndex + 7] = c.a;
 
         dirty = true;
     }

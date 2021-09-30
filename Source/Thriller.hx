@@ -1,3 +1,6 @@
+import lime.ui.MouseButton;
+import mini.gfx.Color;
+import haxe.display.Display.DisplayModuleTypeParameter;
 import mini.gfx.Tilemap;
 import mini.gfx.Buffer;
 import mini.gfx.Texture;
@@ -23,6 +26,12 @@ class Thriller extends Game {
     var texture:Texture;
 
     var tilemap:Tilemap;
+
+    var cursorX:Int = 0;
+    var cursorY:Int = 0;
+
+    var oldCursorX:Int = -1;
+    var oldCursorY:Int = -1;
     
     override function init(app:MiniApplication) {
         Gfx.setScreenSize(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -77,11 +86,37 @@ class Thriller extends Game {
     }
 
     override function update(deltaTime:Int) {
+        /*
         for (x in 0 ... 40) {
             for (y in 0 ... 23) {
-                tilemap.setTile(x, y, Std.random(10));
+                // tilemap.setTile(x, y, Std.random(10));
+                tilemap.setColor(x, y, new Color(Math.random(), 0, 0));
             }
         }
+        */
+
+        if (cursorX != oldCursorX || cursorY != oldCursorY) {
+            tilemap.setColor(oldCursorX, oldCursorY, new Color());
+            tilemap.setColor(cursorX, cursorY, new Color(0, 1, 1));
+
+            oldCursorX = cursorX;
+            oldCursorY = cursorY;
+        }
+    }
+
+    override function onMouseMove(x:Int, y:Int) {
+        cursorX = Math.floor(x / 16);
+        cursorY = Math.floor(y / 16);
+    }
+
+    override function onMouseDown(x:Int, y:Int, button:MouseButton) {
+        cursorX = Math.floor(x / 16);
+        cursorY = Math.floor(y / 16);
+    }
+
+    override function onMouseUp(x:Int, y:Int, button:MouseButton) {
+        cursorX = Math.floor(x / 16);
+        cursorY = Math.floor(y / 16);
     }
 
     override function render() {
