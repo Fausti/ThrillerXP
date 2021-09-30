@@ -71,7 +71,7 @@ class MiniApplication extends Application {
         ];
 
         bufferFramebuffer = new Buffer();
-        bufferFramebuffer.setData(data);
+        bufferFramebuffer.setVertices(data);
 
         framebuffer = Gfx.gl.createFramebuffer();
         Gfx.gl.bindFramebuffer(Gfx.gl.FRAMEBUFFER, framebuffer);
