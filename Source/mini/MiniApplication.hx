@@ -20,9 +20,6 @@ class MiniApplication extends Application {
 
     var game:Game;
 
-    var bufferBG:Buffer;
-	var textureBG:Texture;
-
     var textureFramebuffer:Texture;
     var bufferFramebuffer:Buffer;
     var framebuffer:GLFramebuffer;
@@ -45,8 +42,24 @@ class MiniApplication extends Application {
         Debug.log("App:init");
         Gfx.init();
 
-        // Framebuffer
+        __upscaleShader = [];
+		__u_Scale = [];
+		__u_InputSize = [];
+		__u_OutputSize = [];
+		
+		var index:Int = 0;
+		for (fileName in __shaders) {
+			__upscaleShader[index] = Shader.createShaderFrom(Assets.getText("assets/shader/"+fileName+".vert"), Assets.getText("assets/shader/"+fileName+".frag"));
+		
+			__u_Scale[index] = __upscaleShader[index].getUniformLocation("u_Scale");
+			__u_InputSize[index] = __upscaleShader[index].getUniformLocation("u_InputSize");
+			__u_OutputSize[index] = __upscaleShader[index].getUniformLocation("u_OutputSize");
+			
+			index++;
+		}
+    }
 
+    function _initFramebuffer() {
         textureFramebuffer = new Texture();
         textureFramebuffer.upload(640 * 2, 400 * 2, null);
 
@@ -64,36 +77,6 @@ class MiniApplication extends Application {
         Gfx.gl.bindFramebuffer(Gfx.gl.FRAMEBUFFER, framebuffer);
         Gfx.gl.framebufferTexture2D(Gfx.gl.FRAMEBUFFER, Gfx.gl.COLOR_ATTACHMENT0, Gfx.gl.TEXTURE_2D, textureFramebuffer.handle, 0);
         Gfx.gl.bindFramebuffer(Gfx.gl.FRAMEBUFFER, null);
-
-        // Overlay
-
-        data = [
-            640 * 2, 	400 * 2, 	1, 1,   1, 1, 1, 1,
-            0, 		400 * 2, 	0, 1,   1, 1, 1, 1,
-            640 * 2, 	0, 		1, 0,   1, 1, 1, 1,
-            0, 		0, 		0, 0,   1, 1, 1, 1,
-        ];
-
-        bufferBG = new Buffer();
-        bufferBG.setData(data);
-
-        textureBG = Texture.fromFile("assets/thriller_pd/background.png");
-
-        __upscaleShader = [];
-		__u_Scale = [];
-		__u_InputSize = [];
-		__u_OutputSize = [];
-		
-		var index:Int = 0;
-		for (fileName in __shaders) {
-			__upscaleShader[index] = Shader.createShaderFrom(Assets.getText("assets/shader/"+fileName+".vert"), Assets.getText("assets/shader/"+fileName+".frag"));
-		
-			__u_Scale[index] = __upscaleShader[index].getUniformLocation("u_Scale");
-			__u_InputSize[index] = __upscaleShader[index].getUniformLocation("u_InputSize");
-			__u_OutputSize[index] = __upscaleShader[index].getUniformLocation("u_OutputSize");
-			
-			index++;
-		}
     }
 
     public function init() {
@@ -136,7 +119,7 @@ class MiniApplication extends Application {
 
         if (game != null) {
             game.init(this);
-
+            _initFramebuffer();
             updateMatrix();
         }
     }
@@ -184,10 +167,6 @@ class MiniApplication extends Application {
                     this.game.render();
                     // Gfx.gl.disable(Gfx.gl.SCISSOR_TEST);
 
-                    // draw overlay
-                    
-		            textureBG.use();
-                    bufferBG.draw();
                     Gfx.gl.bindFramebuffer(Gfx.gl.FRAMEBUFFER, null);
 
                     // draw framebuffer content
