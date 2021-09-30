@@ -13,6 +13,7 @@ class Gfx {
     public static var screenHeight:Int = 0;
     public static var screenZoom:Int = 1;
 
+    public static var overlayMatrix:Matrix4 = new Matrix4();
     public static var screenMatrix:Matrix4 = new Matrix4();
     public static var projMatrix:Matrix4 = new Matrix4();
 
@@ -25,8 +26,12 @@ class Gfx {
         Gfx.screenWidth = w;
         Gfx.screenHeight = h;
 
-        screenMatrix.createOrtho(0, w * 2, 
+        overlayMatrix.createOrtho(0, w * 2, 
             0, h * 2, 
+            -1000, 1000);
+
+        screenMatrix.createOrtho(-Math.floor(w / 2),  w + Math.floor(w / 2), 
+            -Math.floor(h / 2), h + Math.floor(h / 2), 
             -1000, 1000);
     }
 

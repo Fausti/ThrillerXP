@@ -38,11 +38,20 @@ class Thriller extends Game {
 
         // Intro Image
         
+        /*
         data  = [
             SCREEN_WIDTH + HALF_WIDTH, 	SCREEN_HEIGHT + HALF_HEIGHT, 	1, 1,   1, 1, 1, 1,
             HALF_WIDTH, 		        SCREEN_HEIGHT + HALF_HEIGHT, 	0, 1,   1, 1, 1, 1,
             SCREEN_WIDTH + HALF_WIDTH, 	HALF_HEIGHT, 		            1, 0,   1, 1, 1, 1,
             HALF_WIDTH, 		        HALF_HEIGHT, 		            0, 0,   1, 1, 1, 1,
+        ];
+        */
+
+        data  = [
+            SCREEN_WIDTH, 	SCREEN_HEIGHT, 	1, 1,   1, 1, 1, 1,
+            0, 		        SCREEN_HEIGHT, 	0, 1,   1, 1, 1, 1,
+            SCREEN_WIDTH, 	0,	            1, 0,   1, 1, 1, 1,
+            0, 		        0,	            0, 0,   1, 1, 1, 1,
         ];
 
         buffer = new Buffer();
@@ -54,11 +63,14 @@ class Thriller extends Game {
     }
 
     override function render() {
+        Gfx.gl.uniformMatrix4fv(Shader.current.u_camMatrix, false, Gfx.screenMatrix);
+
         // aktiven Bildschirm zeichnen
         texture.use();
         buffer.draw();
 
         // Overlay zeichnen
+        Gfx.gl.uniformMatrix4fv(Shader.current.u_camMatrix, false, Gfx.overlayMatrix);
         textureOverlay.use();
         bufferOverlay.draw();
     }

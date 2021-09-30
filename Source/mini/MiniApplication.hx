@@ -146,8 +146,6 @@ class MiniApplication extends Application {
 
                     Gfx.setShader(Gfx.shaderDefault);
 
-                    Gfx.gl.uniformMatrix4fv(Shader.current.u_camMatrix, false, Gfx.screenMatrix);
-
                     #if desktop
 		                Gfx.gl.enable(Gfx.gl.TEXTURE_2D);
 		            #end
