@@ -32,6 +32,8 @@ class Thriller extends Game {
 
     var oldCursorX:Int = -1;
     var oldCursorY:Int = -1;
+
+    var mouseDown:Bool = false;
     
     override function init(app:MiniApplication) {
         Gfx.setScreenSize(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -107,16 +109,32 @@ class Thriller extends Game {
     override function onMouseMove(x:Int, y:Int) {
         cursorX = Math.floor(x / 16);
         cursorY = Math.floor(y / 16);
+
+        if (mouseDown) {
+            if (tilemap.getTile(cursorX, cursorY) != 3) {
+                tilemap.setTile(cursorX, cursorY, 3);
+            }
+        }
     }
 
     override function onMouseDown(x:Int, y:Int, button:MouseButton) {
         cursorX = Math.floor(x / 16);
         cursorY = Math.floor(y / 16);
+
+        mouseDown = true;
+
+        if (mouseDown) {
+            if (tilemap.getTile(cursorX, cursorY) != 3) {
+                tilemap.setTile(cursorX, cursorY, 3);
+            }
+        }
     }
 
     override function onMouseUp(x:Int, y:Int, button:MouseButton) {
         cursorX = Math.floor(x / 16);
         cursorY = Math.floor(y / 16);
+
+        mouseDown = false;
     }
 
     override function render() {
