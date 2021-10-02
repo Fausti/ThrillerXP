@@ -1,3 +1,6 @@
+import sys.thread.Thread;
+import mini.gfx.Sprite;
+import mini.gfx.Tileset;
 import lime.ui.MouseButton;
 import mini.gfx.Color;
 import haxe.display.Display.DisplayModuleTypeParameter;
@@ -17,7 +20,7 @@ class Thriller extends Game {
     public static inline var HALF_WIDTH:Int = Math.floor(SCREEN_WIDTH / 2);
     public static inline var HALF_HEIGHT:Int = Math.floor(SCREEN_HEIGHT / 2);
 
-    public static var tileset:Texture;
+    public static var tileset:Tileset;
 
     var bufferOverlay:Buffer;
 	var textureOverlay:Texture;
@@ -34,6 +37,9 @@ class Thriller extends Game {
     var oldCursorY:Int = -1;
 
     var mouseDown:Bool = false;
+
+    var sprNone:Sprite;
+    var sprCheckered:Sprite;
     
     override function init(app:MiniApplication) {
         Gfx.setScreenSize(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -77,12 +83,14 @@ class Thriller extends Game {
 
         // Tileset
 
-        Thriller.tileset = Texture.fromFile("assets/thriller_pd/tileset.png");
+        Thriller.tileset = new Tileset("assets/thriller_pd/tileset.png", 32, 32);
+
+        sprNone = new Sprite(Thriller.tileset, 0, 0);
+        sprCheckered = new Sprite(Thriller.tileset, 3, 2);
 
         // Tilemap
 
         tilemap = new Tilemap(40, 23);
-        Debug.log(tilemap.getTile(0, 0));
 
         super.init(app);
     }
@@ -97,6 +105,7 @@ class Thriller extends Game {
         }
         */
 
+        /*
         if (cursorX != oldCursorX || cursorY != oldCursorY) {
             tilemap.setColor(oldCursorX, oldCursorY, new Color());
             tilemap.setColor(cursorX, cursorY, new Color(0, 1, 1));
@@ -104,6 +113,7 @@ class Thriller extends Game {
             oldCursorX = cursorX;
             oldCursorY = cursorY;
         }
+        */
     }
 
     override function onMouseMove(x:Int, y:Int) {
@@ -111,8 +121,8 @@ class Thriller extends Game {
         cursorY = Math.floor(y / 16);
 
         if (mouseDown) {
-            if (tilemap.getTile(cursorX, cursorY) != 3) {
-                tilemap.setTile(cursorX, cursorY, 3);
+            if (tilemap.getTile(cursorX, cursorY) != sprCheckered) {
+                tilemap.setTile(cursorX, cursorY, sprCheckered);
             }
         }
     }
@@ -124,8 +134,8 @@ class Thriller extends Game {
         mouseDown = true;
 
         if (mouseDown) {
-            if (tilemap.getTile(cursorX, cursorY) != 3) {
-                tilemap.setTile(cursorX, cursorY, 3);
+            if (tilemap.getTile(cursorX, cursorY) != sprCheckered) {
+                tilemap.setTile(cursorX, cursorY, sprCheckered);
             }
         }
     }

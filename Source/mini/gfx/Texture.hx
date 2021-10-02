@@ -16,6 +16,9 @@ class Texture {
     }
 
     public function upload(width:Int, height:Int, data:UInt8Array) {
+        this.width = width;
+        this.height = height;
+        
         Gfx.gl.bindTexture(Gfx.gl.TEXTURE_2D, handle);
         Gfx.gl.texParameteri(Gfx.gl.TEXTURE_2D, Gfx.gl.TEXTURE_WRAP_S, Gfx.gl.CLAMP_TO_EDGE);
         Gfx.gl.texParameteri(Gfx.gl.TEXTURE_2D, Gfx.gl.TEXTURE_WRAP_T, Gfx.gl.CLAMP_TO_EDGE);

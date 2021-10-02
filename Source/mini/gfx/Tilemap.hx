@@ -1,9 +1,11 @@
 package mini.gfx;
 
+import mini.gfx.Sprite;
+import lime.math.Rectangle;
+
 typedef TileData = {
-    tileIndex:Int,
+    sprite:Sprite,
     color:Color,
-    userData:Dynamic,
 };
 
 class Tilemap {
@@ -18,6 +20,8 @@ class Tilemap {
 
     private var map:Array<Array<TileData>>;
 
+    public var color(default, null):Color;
+
     public function new(w:Int, h:Int) {
         this.width = w;
         this.height = h;
@@ -27,6 +31,8 @@ class Tilemap {
         var len:Int = 0;
 
         var x0:Float, y0:Float, x1:Float, y1:Float;
+        
+        /*
         var u0:Float, v0:Float, u1:Float, v1:Float;
 
         var tileX:Int = 4;
@@ -38,6 +44,7 @@ class Tilemap {
         v0 = tileY * pixelSize;
         u1 = (tileX + 1) * pixelSize;
         v1 = (tileY + 1) * pixelSize;
+        */
 
         map = [];
 
@@ -48,15 +55,15 @@ class Tilemap {
             x1 = (x + 1) * 16;
 
             for (y in 0 ... h) {
-                map[x].push({tileIndex: 0, color: new Color(1, 1, 1, 1), userData: {}});
+                map[x].push({sprite: null, color: new Color(1, 1, 1, 1)});
 
                 y0 = y * 16;
                 y1 = (y + 1) * 16;
 
-                addVertex(x0, y0,     u0, v0,       1, 1, 1, 1);
-                addVertex(x0, y1,     u0, v1,       1, 1, 1, 1);
-                addVertex(x1, y1,     u1, v1,       1, 1, 1, 1);
-                addVertex(x1, y0,     u1, v0,       1, 1, 1, 1);
+                addVertex(x0, y0,     0, 0,       0, 0, 0, 0);
+                addVertex(x0, y1,     0, 0,       0, 0, 0, 0);
+                addVertex(x1, y1,     0, 0,       0, 0, 0, 0);
+                addVertex(x1, y0,     0, 0,       0, 0, 0, 0);
 
                 dataIndices.push(len + 0);
                 dataIndices.push(len + 1);
@@ -72,6 +79,8 @@ class Tilemap {
 
         // buffer.setVertices(dataVertices);
         // buffer.setIndices(dataIndices);
+
+        color = new Color();
     }
 
     inline function addVertex(x, y, u, v, r, g, b, a) {
@@ -111,54 +120,56 @@ class Tilemap {
         return map[x][y];
     }
 
-    public function getTile(x:Int, y:Int):Int {
-        if (!insideMap(x, y)) return -1;
+    public function getTile(x:Int, y:Int):Rectangle {
+        if (!insideMap(x, y)) return null;
 
-        return map[x][y].tileIndex;
+        return map[x][y].sprite;
     }
 
-    public function setTile(x:Int, y:Int, tileIndex:Int) {
+    public function setTile(x:Int, y:Int, sprite:Sprite) {
         if (!insideMap(x, y)) return;
 
-        map[x][y].tileIndex = tileIndex;
-        
-        var x0:Float, y0:Float, x1:Float, y1:Float;
-        var u0:Float, v0:Float, u1:Float, v1:Float;
-
-        var tileX:Int = tileIndex;
-        var tileY:Int = 0;
-
-        var pixelSize:Float = 16 / 512;
-
-        u0 = tileX * pixelSize;
-        v0 = tileY * pixelSize;
-        u1 = (tileX + 1) * pixelSize;
-        v1 = (tileY + 1) * pixelSize;
+        map[x][y].sprite = sprite;
 
         var dataIndex:Int = getDataIndex(x, y);
 
-        dataVertices[dataIndex + 2] = u0;
-        dataVertices[dataIndex + 3] = v0;
+        dataVertices[dataIndex + 2] = sprite.left;
+        dataVertices[dataIndex + 3] = sprite.top;
+        
+        dataVertices[dataIndex + 4] = sprite.color.r;
+        dataVertices[dataIndex + 5] = sprite.color.g;
+        dataVertices[dataIndex + 6] = sprite.color.b;
+        dataVertices[dataIndex + 7] = sprite.color.a;
 
         dataIndex = dataIndex + 8;
 
-        dataVertices[dataIndex + 2] = u0;
-        dataVertices[dataIndex + 3] = v1;
+        dataVertices[dataIndex + 2] = sprite.left;
+        dataVertices[dataIndex + 3] = sprite.bottom;
+
+        dataVertices[dataIndex + 4] = sprite.color.r;
+        dataVertices[dataIndex + 5] = sprite.color.g;
+        dataVertices[dataIndex + 6] = sprite.color.b;
+        dataVertices[dataIndex + 7] = sprite.color.a;
 
         dataIndex = dataIndex + 8;
 
-        dataVertices[dataIndex + 2] = u1;
-        dataVertices[dataIndex + 3] = v1;
+        dataVertices[dataIndex + 2] = sprite.right;
+        dataVertices[dataIndex + 3] = sprite.bottom;
+
+        dataVertices[dataIndex + 4] = sprite.color.r;
+        dataVertices[dataIndex + 5] = sprite.color.g;
+        dataVertices[dataIndex + 6] = sprite.color.b;
+        dataVertices[dataIndex + 7] = sprite.color.a;
 
         dataIndex = dataIndex + 8;
 
-        dataVertices[dataIndex + 2] = u1;
-        dataVertices[dataIndex + 3] = v0;
+        dataVertices[dataIndex + 2] = sprite.right;
+        dataVertices[dataIndex + 3] = sprite.top;
 
-        // addVertex(x0, y0,     u0, v0,       1, 1, 1, 1);
-        // addVertex(x0, y1,     u0, v1,       1, 1, 1, 1);
-        // addVertex(x1, y1,     u1, v1,       1, 1, 1, 1);
-        // addVertex(x1, y0,     u1, v0,       1, 1, 1, 1);
+        dataVertices[dataIndex + 4] = sprite.color.r;
+        dataVertices[dataIndex + 5] = sprite.color.g;
+        dataVertices[dataIndex + 6] = sprite.color.b;
+        dataVertices[dataIndex + 7] = sprite.color.a;
 
         dirty = true;
     }
