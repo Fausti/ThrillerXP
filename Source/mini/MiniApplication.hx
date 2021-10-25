@@ -289,14 +289,23 @@ class MiniApplication extends Application {
     }
 
     override function onMouseDown(x:Float, y:Float, button:MouseButton) {
+        Input.mouseX = fixMouseX(x);
+        Input.mouseY = fixMouseY(y);
+
         if (game != null) game.onMouseDown(fixMouseX(x), fixMouseY(y), button);
     }
 
     override function onMouseUp(x:Float, y:Float, button:MouseButton) {
+        Input.mouseX = fixMouseX(x);
+        Input.mouseY = fixMouseY(y);
+
         if (game != null) game.onMouseUp(fixMouseX(x), fixMouseY(y), button);
     }
 
     override function onMouseMove(x:Float, y:Float) {
+        Input.mouseX = fixMouseX(x);
+        Input.mouseY = fixMouseY(y);
+        
         if (game != null) game.onMouseMove(fixMouseX(x), fixMouseY(y));
     }
 

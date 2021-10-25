@@ -23,28 +23,19 @@ class Tilemap {
     public var color(default, null):Color;
 
     public function new(w:Int, h:Int) {
+        buffer = new Buffer(true);
+        color = new Color();
+
+        resize(w, h);
+    }
+
+    public function resize(w:Int, h:Int) {
         this.width = w;
         this.height = h;
-
-        buffer = new Buffer(true);
 
         var len:Int = 0;
 
         var x0:Float, y0:Float, x1:Float, y1:Float;
-        
-        /*
-        var u0:Float, v0:Float, u1:Float, v1:Float;
-
-        var tileX:Int = 4;
-        var tileY:Int = 0;
-
-        var pixelSize:Float = 16 / 512;
-
-        u0 = tileX * pixelSize;
-        v0 = tileY * pixelSize;
-        u1 = (tileX + 1) * pixelSize;
-        v1 = (tileY + 1) * pixelSize;
-        */
 
         map = [];
 
@@ -76,11 +67,6 @@ class Tilemap {
                 len = len + 4;
             }
         }
-
-        // buffer.setVertices(dataVertices);
-        // buffer.setIndices(dataIndices);
-
-        color = new Color();
     }
 
     inline function addVertex(x, y, u, v, r, g, b, a) {

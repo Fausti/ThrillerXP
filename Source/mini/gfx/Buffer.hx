@@ -55,7 +55,7 @@ class Buffer {
         dirty = true;
     }
 
-    public function draw() {
+    public function draw(?length:Int = -1) {
         update();
 
         Gfx.gl.bindBuffer(Gfx.gl.ARRAY_BUFFER, handle);
@@ -65,11 +65,20 @@ class Buffer {
         Shader.current.setAttribute(Shader.current.a_TexCoord0, 2, Gfx.gl.FLOAT, 8 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
         Shader.current.setAttribute(Shader.current.a_Color, 4, Gfx.gl.FLOAT, 8 * Float32Array.BYTES_PER_ELEMENT, 4 * Float32Array.BYTES_PER_ELEMENT);
 
-        if (!indexed) {
-            Gfx.gl.drawArrays(Gfx.gl.TRIANGLE_STRIP, 0, 4);
+        if (length == -1) {
+            if (!indexed) {
+                Gfx.gl.drawArrays(Gfx.gl.TRIANGLE_STRIP, 0, 4);
+            } else {
+                Gfx.gl.drawElements(Gfx.gl.TRIANGLES, dataIndices.length, Gfx.gl.UNSIGNED_SHORT, 0);
+            }
         } else {
-            Gfx.gl.drawElements(Gfx.gl.TRIANGLES, dataIndices.length, Gfx.gl.UNSIGNED_SHORT, 0);
+            if (!indexed) {
+                Gfx.gl.drawArrays(Gfx.gl.TRIANGLE_STRIP, 0, length);
+            } else {
+                Gfx.gl.drawElements(Gfx.gl.TRIANGLES, length, Gfx.gl.UNSIGNED_SHORT, 0);
+            }
         }
+        
 
         Gfx.gl.bindBuffer(Gfx.gl.ARRAY_BUFFER, null);
         if (indexed) Gfx.gl.bindBuffer(Gfx.gl.ELEMENT_ARRAY_BUFFER, null);
